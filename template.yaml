@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Modular serverless APIs for my portfolio website
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+    Description: Deployment environment
+
+  ProjectName:
+    Type: String
+    Default: Portfolio
+    Description: Project name
+
+Globals:
+  Function:
+    Timeout: 10       # 10 seconds timeout
+    MemorySize: 512   # 512 MB RAM
+    Runtime: python3.13
+    Architectures:
+      - x86_64
+    Tracing: Disabled
+    LoggingConfig:
+      LogFormat: JSON
+    Tags:
+      Environment: !Ref EnvironmentName
+      Project: !Ref ProjectName
+
+  Api:
+    TracingEnabled: false
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AllowOrigin: "'*'"
+
+Resources:
+
+  PortfolioApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${ProjectName}Api"
+      StageName: Prod
+      Tags:
+        Environment: !Ref EnvironmentName
+        Project: !Ref ProjectName
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: hello_world/
+      Handler: app.lambda_handler
+      Events:
+        HelloWorldApi:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: GET
+            RestApiId: !Ref PortfolioApi
+      Tags:
+        Environment: !Ref EnvironmentName
+        Project: !Ref ProjectName
+
+Outputs:
+  HelloWorldApiEndpoint:
+    Description: Hello World API endpoint URL
+    Value: !Sub "https://${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello"
+
+  HelloWorldFunctionArn:
+    Description: Hello World Lambda Function ARN
+    Value: !GetAtt HelloWorldFunction.Arn
