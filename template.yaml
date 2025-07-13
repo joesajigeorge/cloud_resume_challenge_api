@@ -41,7 +41,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Name: !Sub "${ProjectName}Api"
-      StageName: Prod
+      StageName: prod
       Tags:
         Environment: !Ref EnvironmentName
         Project: !Ref ProjectName
@@ -62,11 +62,31 @@ Resources:
         Environment: !Ref EnvironmentName
         Project: !Ref ProjectName
 
+  ExperienceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: experience_counter/
+      Handler: app.lambda_handler
+    Environment:
+      Variables:
+        CAREER_START: "18-06-2018"
+      Events:
+        TotalExperienceApi:
+          Type: Api
+          Properties:
+            Path: /getTotalExp
+            Method: GET
+            RestApiId: !Ref PortfolioApi
+      Tags:
+        Environment: !Ref EnvironmentName
+        Project: !Ref ProjectName
+
 Outputs:
   HelloWorldApiEndpoint:
     Description: Hello World API endpoint URL
-    Value: !Sub "https://${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello"
+    Value: !Sub "https://${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com/prod/hello"
 
-  HelloWorldFunctionArn:
-    Description: Hello World Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
+  ExperienceApiEndpoint:
+    Description: Experience API endpoint URL
+    Value: !Sub "https://${PortfolioApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getTotalExp"
+
